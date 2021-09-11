@@ -10,9 +10,8 @@ namespace CodingTest.Services.BLL
         public static decimal CalculateAmountWithInterest(int period, decimal loanAmount, decimal interest)
         {
             var interestAmount = (interest / 100) * loanAmount;
-            var totalAmount = loanAmount + interestAmount;
 
-            return totalAmount / period;
+            return (loanAmount + (interestAmount * period)) / period;
         }
     }
 }

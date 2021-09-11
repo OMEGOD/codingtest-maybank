@@ -58,7 +58,7 @@ namespace CodingTest.Services.Repository.LoanRepository
             var targetLoans = dbContext.Loans
                 .Where(x
                 => x.IsActive
-                && (x.Amount.ToString().Contains(request.Amount) || x.MonthPeriod.ToString().Contains(request.Period)))
+                && (x.Amount.ToString().Contains(request.Amount) && x.MonthPeriod.ToString().Contains(request.Period)))
                 .ToList();
 
             var response = _mapper.Map<List<LoanSearchResponse>>(targetLoans);
@@ -70,6 +70,9 @@ namespace CodingTest.Services.Repository.LoanRepository
         {
             var interestRate = isEmployee ? targetLoan.SpecialInterestRate : targetLoan.InterestRate;
             var monthlyPayment = LoanDAL.CalculateAmountWithInterest(targetLoan.MonthPeriod, targetLoan.Amount, interestRate);
+            var firstOverduePayment = LoanDAL.CalculateAmountWithInterest(targetLoan.MonthPeriod, monthlyPayment * targetLoan.MonthPeriod, targetLoan.OverdueRate);
+            var secondOverduePayment = LoanDAL.CalculateAmountWithInterest(targetLoan.MonthPeriod, firstOverduePayment * targetLoan.MonthPeriod, targetLoan.OverdueRate);
+            var thirdOverduePayment = LoanDAL.CalculateAmountWithInterest(targetLoan.MonthPeriod, secondOverduePayment * targetLoan.MonthPeriod, targetLoan.OverdueRate);
 
             var response = new LoanDetailsResponse
             {
@@ -78,7 +81,9 @@ namespace CodingTest.Services.Repository.LoanRepository
                 OverdueRate = targetLoan.OverdueRate.ToString("N") + "%",
                 Period = targetLoan.MonthPeriod.ToString() + " Bulan",
                 MonthlyPayment = monthlyPayment.ToString("N0"),
-                OverduePayment = LoanDAL.CalculateAmountWithInterest(targetLoan.MonthPeriod, monthlyPayment * targetLoan.MonthPeriod, targetLoan.OverdueRate).ToString("N0")
+                OverduePayment = firstOverduePayment.ToString("N0") 
+                                + ", " + secondOverduePayment.ToString("N0")
+                                + ", " + thirdOverduePayment.ToString("N0")
             };
 
             return response;
